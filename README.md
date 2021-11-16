@@ -1,12 +1,11 @@
-# *Under Construction
 # MMCoref_cleaned
 Cleaned code (cleaning still in progress) for the MMCoref task of the [SIMMC 2.0](https://github.com/facebookresearch/simmc2) dataset.  
 Pretrained vision-language models adapted from [Transformers-VQA](https://github.com/YIKUAN8/Transformers-VQA).  
 Zero-shot visual feature extraction using [CLIP](https://github.com/openai/CLIP) and [BUTD](https://github.com/airsplay/py-bottom-up-attention).  
-Zero-shot non-visual prefab feature (flattened into strings) extraction using [BERT](https://huggingface.co/bert-large-uncased) and [SBERT](https://huggingface.co/sentence-transformers/paraphrase-xlm-r-multilingual-v1).  
-TO DO: Add an overview here.
+Zero-shot non-visual prefab feature (flattened into strings) extraction using [BERT](https://huggingface.co/bert-large-uncased) and [SBERT](https://huggingface.co/sentence-transformers/paraphrase-xlm-r-multilingual-v1).
+Technical report to be added.
 
-## Dependencies (incomplete)
+## Dependencies
     requirements.txt
     
 ## Download the data and pretrained/trained model checkpoints
@@ -15,14 +14,13 @@ TO DO: Add an overview here.
 * Trained models: Checkpints in ./trained. Download from ./trained/placeholder.txt
 
 ## Preprocess
-* Convert json files using ./scripts/converter.py *Currently not working. Download the processed data instead.
+* Convert json files ~~using ./scripts/converter.py~~ *Currently not working. (Someone lost the latest converter.py.) Download the processed data instead.
 * Get BERT/SBERT embeddings of non-visual prefab features using ./scripts/{get_KB_embedding, get_KB_embedding_SBERT, get_KB_embedding_no_duplicate}.py
-* Get CLIP/BUTD embeddigns for images using scripts ./scripts/get-visual-features-{CLIP, RCNN}.ipynb TODO: make kaggle notebooks available.
+* Get CLIP/BUTD embeddigns for images using scripts ./scripts/get-visual-features-{CLIP, RCNN}.ipynb
 * Or just download everything from ./processed/placeholder.txt
 
 ## Train
 * Under ./sh/train. See the arguments for used input.
-TODO: upload checkpoints
 
 ## Inference and evaluate
 * Under ./sh/infer_eval (devtest split) and ./sh/infer_eval_dev (dev split)
