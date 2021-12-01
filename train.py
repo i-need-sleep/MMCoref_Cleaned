@@ -26,7 +26,7 @@ def train(args):
     print(f'{NAME} batch_size={BATCH_SIZE}, Adam_lr={LR}, FocalAlpha={ALPHA}, GAMMA={GAMMA}, scheduler={SCHEDULER}\n')
 
     arg_dict = vars(args)
-    for model_flag in ['obj_id', 'vis_feats_clip', 'vis_feats_rcnn', 'pos', 'scene_seg', 'obj_embs_bert', 'obj_embs_sbert', 'kb_id_bert', 'kb_id_sbert', 'attn_bias','graph_attn','obj_men','pred_men']:
+    for model_flag in ['obj_id', 'vis_feats_clip', 'vis_feats_rcnn', 'pos', 'scene_seg', 'obj_embs_bert', 'obj_embs_sbert', 'kb_id_bert', 'kb_id_sbert', 'attn_bias','graph_attn','obj_men','pred_men','more_roi']:
         print(model_flag)
         if arg_dict[model_flag] == 'True':
             arg_dict[model_flag] = True
@@ -43,8 +43,8 @@ def train(args):
     print(device)
 
     # Make loaders
-    train_loader = make_loader('train', BATCH_SIZE)
-    dev_loader = make_loader('dev', BATCH_SIZE_DEV)
+    train_loader = make_loader('train', BATCH_SIZE, more_roi=arg_dict['more_roi'])
+    dev_loader = make_loader('dev', BATCH_SIZE_DEV, more_roi=arg_dict['more_roi'])
 
     # Setup Tensorboard
     writer = SummaryWriter(log_dir='./result/runs' ,comment=f'{NAME} batch_size={BATCH_SIZE}, Adam_lr={LR}, FocalAlpha={ALPHA}, GAMMA={GAMMA}')
@@ -283,6 +283,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--attn_bias', default=False)
     parser.add_argument('--graph_attn', default=False)
+    
+    parser.add_argument('--more_roi', default=False)
 
     args = parser.parse_args()
 

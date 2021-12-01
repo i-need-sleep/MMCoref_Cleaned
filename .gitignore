@@ -17,6 +17,7 @@ sh/test.sh
 
 *.err
 *.out
+*.zip
 
 result/*/*
 trained/*

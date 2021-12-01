@@ -6,15 +6,17 @@ from model.Transformers_VQA_master.src.tokenization import BertTokenizer
 PROCESSED_ROOT = './processed'
 
 class UNITER_on_CLIP_BERT_Dataset(Dataset):
-    def __init__(self, split, max_n_obj=200):
+    def __init__(self, split, more_roi, max_n_obj=200):
         self.file_path = f'{PROCESSED_ROOT}/{split}.json'
         self.KB_emb_path = f'{PROCESSED_ROOT}/KB_{split}.pt'
         self.KB_emb_SBERT_path = f'{PROCESSED_ROOT}/KB_SBERT_{split}.pt'
         self.vis_feat_path = f'{PROCESSED_ROOT}/img_features.pt'
         self.vis_feat_rcnn_path = f'{PROCESSED_ROOT}/img_features_rcnn.json'
         self.KB_dict_path = f'{PROCESSED_ROOT}/KB_dict.json'
+        self.roi_path = f'{PROCESSED_ROOT}/more_img_roi.pt'
         self.max_n_obj = max_n_obj
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.more_roi = more_roi
 
         self.tokenizer = BertTokenizer.from_pretrained('./pretrained/bert-base-cased/bert-base-cased-vocab.txt')
         self.tokenizer_uncased = BertTokenizer.from_pretrained('./pretrained/bert-base-uncased/bert-base-uncased-vocab.txt')
@@ -31,7 +33,8 @@ class UNITER_on_CLIP_BERT_Dataset(Dataset):
         self.KB_emb_dict = torch.load(self.KB_emb_path, map_location=self.device) # KB_emb_dict['obj_string']
         self.KB_emb_dict_SBERT = torch.load(self.KB_emb_SBERT_path, map_location=self.device)
         self.vis_feat_dict = torch.load(self.vis_feat_path, map_location=self.device) # vis_feat_dict[scene_name][local_idx or 'Scene']
-    
+        self.roi_dict = torch.load(self.roi_path, map_location=self.device)
+
     def __len__(self):
         return len(self.data)
     
@@ -65,6 +68,10 @@ class UNITER_on_CLIP_BERT_Dataset(Dataset):
         line = self.data[index]
         dial, objects, reference, obj_ids, obj_pos, obj_bbox, scenes, KB_ids, scene_segs, obj_rels, obj_mens = line['dial'], line['objects'], line['reference_mask'], line['candidate_ids'], line['candidate_pos'], line['candidate_bbox'], line['scenes'], line['KB_ids'], line['scene_seg'], line['candidate_relations'], line['candidate_mentioned']
         
+        # Retrive add extra ROI features (#roi, 1024)
+        if self.more_roi:
+            roi_boxes, roi_feats = get_extra_roi_feats(scenes, obj_bbox, self.roi_dict)
+
         # relationship mask (512, 512) * 4
         rel_mask_left, rel_mask_right, rel_mask_up, rel_mask_down = self._make_relationship_mask(obj_rels, obj_ids)
 
@@ -133,6 +140,8 @@ class UNITER_on_CLIP_BERT_Dataset(Dataset):
                 vis_feats_rcnn = torch.cat((vis_feats_rcnn, vis_feat_scenes_rcnn[str(obj_id)]), axis=0)
         for scene_feat_rcnn in scene_feats_rcnn:
             vis_feats_rcnn = torch.cat((vis_feats_rcnn, scene_feat_rcnn), axis=0)
+
+        vis_feats_rcnn = torch.cat((vis_feats_rcnn, roi_feats), axis=0)
         vis_feats_rcnn = torch.nn.ZeroPad2d((0,0,0, self.max_n_obj - vis_feats_rcnn.shape[0]))(vis_feats_rcnn)
             
         # Obj pos (1, #obj)
@@ -153,6 +162,7 @@ class UNITER_on_CLIP_BERT_Dataset(Dataset):
                 bboxes = torch.tensor([boxes])
             else:
                 bboxes = torch.cat((bboxes, torch.tensor([boxes])), axis=0)
+        bboxes = torch.cat((bboxes, roi_boxes), axis=0)
         bboxes = torch.nn.ZeroPad2d((0,0,0,self.max_n_obj-bboxes.shape[0]))(bboxes) # zero pad to (max_n_obj, 4) x,y,h,w
         new_bboxes = torch.zeros_like(bboxes)
         new_bboxes[:,0:2] = bboxes[:,0:2] 
@@ -330,8 +340,70 @@ def mr_collate(data):
         'rel_mask_down': rel_mask_down
     }
     
-def make_loader(split, batch_size):
-    dataset = UNITER_on_CLIP_BERT_Dataset(split)
+
+def get_extra_roi_feats(scene_paths, bboxes, roi_dict, IOU_thresh=0.8):
+    for scene_path in scene_paths:
+        if scene_path[:2] == 'm_':
+            scene_path = scene_path[2:]
+        entry = roi_dict["/kaggle/input/simmc-img/data/all_images/"+scene_path+".png"]
+        roi_boxes = entry["instances"]
+        features = entry["roi_features"]
+
+        for i in range(roi_boxes.shape[0]):
+            roi_box = roi_boxes[i,:]
+            try:
+                if len(bboxes) + bboxes_out.shape[0] > 198:
+                    break
+            except:
+                pass
+
+            # Rearrange into the SIMMC's format
+            # x0 y0 x1 y1 to x0 y0 h w
+            x0_r = roi_box[0]
+            y0_r = roi_box[1]
+            x1_r = roi_box[2]
+            y1_r = roi_box[3]
+            roi_box_new = [x0_r, y0_r, y1_r-y0_r, x1_r-x0_r]
+            add = True
+            
+            for obj_box in bboxes:
+                # Compute ROI and filter out the ones high IOUs
+                x0 = obj_box[0]
+                y0 = obj_box[1]
+                x1 = x0 + obj_box[3]
+                y1 = y0 + obj_box[2]
+
+                xA = max(x0, x0_r)
+                yA = max(y0, y0_r)
+                xB = min(x1, x1_r)
+                yB = min(y1, y1_r)
+
+                interArea = max(0, xB - xA + 1e-6) * max(0, yB - yA + 1e-6)
+                # compute the area of both the prediction and ground-truth
+                # rectangles
+                boxAArea = (x1 - x0 + 1e-6) * (y1 - y0 + 1e-6)
+                boxBArea = (x1_r - x0_r + 1e-6) * (y1_r - y0_r + 1e-6)
+                
+                iou = interArea / float(boxAArea + boxBArea - interArea)
+
+                # Filter out ROIs with high IOU with obj bboxes
+                if iou > IOU_thresh:
+                    add = False
+                    break
+            if add:
+                try:
+                    bboxes_out = torch.cat((bboxes_out, torch.tensor(roi_box_new).reshape(1,-1)), axis=0)
+                    feats_out = torch.cat((feats_out, features[i,:].reshape(1,-1)), axis=0)
+                except:
+                    bboxes_out = torch.tensor(roi_box_new).reshape(1,-1)
+                    feats_out = torch.tensor(features[i,:]).reshape(1,-1)
+
+    return bboxes_out, feats_out
+
+        
+
+def make_loader(split, batch_size, more_roi=True):
+    dataset = UNITER_on_CLIP_BERT_Dataset(split, more_roi)
     loader = DataLoader(dataset, batch_size=batch_size ,shuffle=True, collate_fn=mr_collate)
     return loader
 
