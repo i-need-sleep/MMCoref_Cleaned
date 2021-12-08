@@ -14,7 +14,7 @@ Zero-shot non-visual prefab feature (flattened into strings) extraction using [B
 * Trained models: Checkpints in ./trained. Download from ./trained/placeholder.txt
 
 ## Preprocess
-* Convert json files ~~using ./scripts/converter.py~~ *Currently not working. (Someone lost the latest converter.py.) Download the processed data instead.
+* Convert json files ~~using ./scripts/converter.py~~ *Currently not working. (Someone managed to lose the latest converter.py.) Download the processed data instead.
 * Get BERT/SBERT embeddings of non-visual prefab features using ./scripts/{get_KB_embedding, get_KB_embedding_SBERT, get_KB_embedding_no_duplicate}.py
 * Get CLIP/BUTD embeddigns for images using scripts ./scripts/get-visual-features-{CLIP, RCNN}.ipynb
 * Or just download everything from ./processed/placeholder.txt
