@@ -1,9 +1,9 @@
+## UNITER-Based Situated Coreference Resolution with Rich Multimodal Input: [arXiv](https://arxiv.org/abs/2112.03521)
 # MMCoref_cleaned
-Cleaned code (cleaning still in progress) for the MMCoref task of the [SIMMC 2.0](https://github.com/facebookresearch/simmc2) dataset.  
+Code for the MMCoref task of the [SIMMC 2.0](https://github.com/facebookresearch/simmc2) dataset.  
 Pretrained vision-language models adapted from [Transformers-VQA](https://github.com/YIKUAN8/Transformers-VQA).  
 Zero-shot visual feature extraction using [CLIP](https://github.com/openai/CLIP) and [BUTD](https://github.com/airsplay/py-bottom-up-attention).  
 Zero-shot non-visual prefab feature (flattened into strings) extraction using [BERT](https://huggingface.co/bert-large-uncased) and [SBERT](https://huggingface.co/sentence-transformers/paraphrase-xlm-r-multilingual-v1).
-Technical report to be added.
 
 ## Dependencies
     requirements.txt
