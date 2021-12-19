@@ -1,7 +1,9 @@
-# UNITER-Based Situated Coreference Resolution with Rich Multimodal Input: 
+# UNITER-Based Situated Coreference Resolution with Rich Multimodal Input
 Yichen Huang, Yuchen Wang, Yik-Cheung Tam
+
 New York University Shanghai
-[arXiv URL](https://arxiv.org/abs/2112.03521)
+
+[arXiv](https://arxiv.org/abs/2112.03521)
 
 Code for the MMCoref task of the [SIMMC 2.0](https://github.com/facebookresearch/simmc2) dataset.  
 Pretrained vision-language models adapted from [Transformers-VQA](https://github.com/YIKUAN8/Transformers-VQA).  
