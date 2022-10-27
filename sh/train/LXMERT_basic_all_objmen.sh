@@ -3,7 +3,7 @@
 #SBATCH --nodes=1                   # 这里不用动 多节点脚本请查官方文档
 #SBATCH --ntasks=1                  # 这里不用动 多任务脚本请查官方文档
 #SBATCH --cpus-per-task=8           # 要几块CPU (一般4块就够用了)
-#SBATCH --mem=256GB                  # 最大内存
+#SBATCH --mem=256GB                 # 最大内存
 #SBATCH --time=24:00:00             # 运行时间上限
 #SBATCH --mail-type=END             # ALL / END
 #SBATCH --mail-user=yh2689@nyu.edu  # 结束之后给哪里发邮件

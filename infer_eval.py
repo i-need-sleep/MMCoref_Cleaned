@@ -38,7 +38,7 @@ def infer(args):
     print(device)
 
     # Make loaders
-    test_loader = make_loader(SPLIT, BATCH_SIZE)
+    test_loader = make_loader(SPLIT, BATCH_SIZE, more_roi=arg_dict['more_roi'])
 
     # Load models
     if MODEL == 'UNITER':
@@ -174,6 +174,8 @@ if __name__ == '__main__':
     
     parser.add_argument('--attn_bias', default=False)
     parser.add_argument('--graph_attn', default=False)
+
+    parser.add_argument('--more_roi', default=False)
 
     args = parser.parse_args()
     
